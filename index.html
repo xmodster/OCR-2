@@ -640,7 +640,7 @@
 
                 console.log('Requesting signed URL...');
                 // Request a URL with a decent expiry time (e.g., 1 hour = 60 seconds * 60 minutes)
-                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=3600`, {
+                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=1`, {
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
