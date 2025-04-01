@@ -453,12 +453,13 @@
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
         const dropArea = document.getElementById('drop-area');
-        const downloadMdBtn = document.getElementById('download-md-btn'); // Added download button reference
+        const downloadMdBtn = document.getElementById('download-md-btn');
 
         // State
         let pdfFile = null;
         let currentPdfUrl = null;
-        let rawMarkdownContent = ''; // Added variable to store raw markdown
+        let rawMarkdownContent = ''; // Variable to store raw markdown from API
+        let ocrResultData = null;   // Variable to store the full API result object
 
         // PDF Preview Functions
         async function loadPdfPreview(pdfUrl) {
@@ -513,20 +514,16 @@
             try {
                  const page = await pdf.getPage(pageNum);
                  const viewport = page.getViewport({ scale: 1.0 });
-                 // Ensure container has width before calculating scale
-                 const containerWidth = container.clientWidth || pdfPreview.clientWidth || 600; // Default width if needed
-                 // Adjust scale calculation to prevent overly large canvases for wide PDFs
-                 const scale = Math.min(2.0, (containerWidth / viewport.width) * 0.98); // Max scale 2.0, 98% width
+                 const containerWidth = container.clientWidth || pdfPreview.clientWidth || 600;
+                 const scale = Math.min(2.0, (containerWidth / viewport.width) * 0.98);
                  const scaledViewport = page.getViewport({ scale: scale });
 
                  const canvas = document.createElement('canvas');
                  const context = canvas.getContext('2d');
                  canvas.height = scaledViewport.height;
                  canvas.width = scaledViewport.width;
-                 // Optional: Add some styling to center canvas if container is wider
                  canvas.style.margin = '0 auto';
                  canvas.style.display = 'block';
-
 
                  const renderContext = {
                      canvasContext: context,
@@ -587,16 +584,17 @@
                 markdownContent.innerHTML = '';
                 imagesContent.innerHTML = '';
                 rawContent.textContent = '';
-                downloadMdBtn.style.display = 'none'; // Hide download button
-                rawMarkdownContent = ''; // Clear stored markdown
+                downloadMdBtn.style.display = 'none';
+                rawMarkdownContent = '';
+                ocrResultData = null; // Clear stored result data
 
 
                 if (currentPdfUrl) {
-                    URL.revokeObjectURL(currentPdfUrl); // Clean up old URL
+                    URL.revokeObjectURL(currentPdfUrl);
                 }
                 currentPdfUrl = URL.createObjectURL(pdfFile);
                 loadPdfPreview(currentPdfUrl);
-                processBtn.disabled = false; // Enable process button
+                processBtn.disabled = false;
             }
         }
 
@@ -613,7 +611,6 @@
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${apiKey}`
-                    // 'Content-Type' is automatically set by fetch for FormData
                 },
                 body: formData
             });
@@ -623,9 +620,7 @@
                 try {
                     const errorData = await uploadResponse.json();
                     errorMessage = errorData.error?.message || JSON.stringify(errorData) || errorMessage;
-                } catch (e) {
-                    // Keep the original status text if parsing fails
-                }
+                } catch (e) {}
                 throw new Error(`File upload failed: ${errorMessage}`);
             }
 
@@ -639,8 +634,8 @@
                 console.log('File uploaded successfully. File ID:', fileId);
 
                 console.log('Requesting signed URL...');
-                // Request a URL with a decent expiry time (e.g., 1 hour = 60 seconds * 60 minutes)
-                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=1`, {
+                // Request URL with 1-hour expiry (API expects hours)
+                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=1`, { // Use 1 for 1 hour
                     method: 'GET',
                     headers: {
                         'Accept': 'application/json',
@@ -652,7 +647,7 @@
                      let errorDetail = `Status ${urlResponse.status}: ${urlResponse.statusText}`;
                      try {
                         const errorData = await urlResponse.json();
-                        errorDetail = errorData.error?.message || JSON.stringify(errorData) || errorDetail;
+                        errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail; // Check for 'detail' field too
                      } catch(e) {}
                     throw new Error(`Failed to get signed URL: ${errorDetail}`);
                 }
@@ -674,7 +669,7 @@
                             type: "document_url",
                             document_url: signedUrl
                         },
-                        include_image_base64: true // Request images in base64
+                        include_image_base64: true
                     })
                 });
 
@@ -682,49 +677,41 @@
                     let errorDetail = `Status ${ocrResponse.status}: ${ocrResponse.statusText}`;
                     try {
                         const errorData = await ocrResponse.json();
-                         errorDetail = errorData.error?.message || JSON.stringify(errorData) || errorDetail;
-                    } catch (e) {
-                       // Keep original error text
-                    }
+                         errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail;
+                    } catch (e) {}
                     throw new Error(`OCR processing failed: ${errorDetail}`);
                 }
 
                 const result = await ocrResponse.json();
                 console.log('OCR processing successful.');
-                // console.log('OCR API response structure:', result); // Log the full structure for debugging if needed
                 return result;
 
             } catch (error) {
                 console.error('Error in OCR process:', error);
-                throw error; // Re-throw the error to be caught by the caller
+                throw error;
             }
         }
 
 
         // --- Helper Function to Display Images --- (Corrected Version)
         const displayImage = (image, prefix = '') => {
-             const base64Data = image.image_base64 || image.base64; // Check both possible fields
+             const base64Data = image.image_base64 || image.base64;
              if (base64Data) {
-                // This flag should be declared outside this function if needed globally
-                // hasImages = true;
                 const imageCard = document.createElement('div');
                 imageCard.className = 'image-card';
 
                 const img = document.createElement('img');
                 img.alt = `${prefix}${image.caption || 'Image'}`;
-                img.style.maxWidth = '100%'; // Ensure image fits card
+                img.style.maxWidth = '100%';
 
-                // **** MODIFICATION START ****
                 // Check if the data already includes the 'data:image/' prefix
                 if (base64Data.startsWith('data:image/')) {
                     img.src = base64Data; // Use directly if prefix exists
                 } else {
                     // Construct the src if only raw base64 is present
-                    // Try to infer format, default to png
                     const format = image.format || (base64Data.startsWith('/9j/') ? 'jpeg' : 'png');
                     img.src = `data:image/${format};base64,${base64Data}`;
                 }
-                // **** MODIFICATION END ****
 
                 const caption = document.createElement('div');
                 caption.className = 'image-caption';
@@ -745,11 +732,13 @@
             markdownContent.innerHTML = '';
             imagesContent.innerHTML = '';
             rawMarkdownContent = '';
-            downloadMdBtn.style.display = 'none'; // Hide button initially
+            downloadMdBtn.style.display = 'none';
+            ocrResultData = result; // Store the full result globally
 
             if (!result) {
                 markdownContent.innerHTML = '<p>Error: No data received from the API.</p>';
                 imagesContent.innerHTML = '<p>No images available.</p>';
+                ocrResultData = null; // Clear stored data on error too
                 return;
             }
 
@@ -766,15 +755,15 @@
             let markdownText = '';
             if (result.markdown) {
                 markdownText = result.markdown;
-            } else if (result.text) { // Fallback to plain text if markdown isn't present
+            } else if (result.pages && Array.isArray(result.pages)) { // Use pages if top-level markdown absent
+                markdownText = result.pages
+                    .filter(page => page)
+                    .map(page => page.markdown || page.text || page.content || '')
+                    .join('\n\n---\n\n');
+            } else if (result.text) { // Fallback to plain text
                 markdownText = result.text;
             } else if (result.content) { // Another potential fallback field
                  markdownText = result.content;
-            } else if (result.pages && Array.isArray(result.pages)) { // If markdown is per-page
-                markdownText = result.pages
-                    .filter(page => page) // Ensure page object exists
-                    .map(page => page.markdown || page.text || page.content || '') // Get markdown or text
-                    .join('\n\n---\n\n'); // Join pages with a separator
             }
             // Store the raw markdown
             rawMarkdownContent = markdownText;
@@ -783,24 +772,21 @@
             // --- Display Markdown ---
             if (rawMarkdownContent) {
                 try {
-                     // Process markdown, potentially embedding base64 images
                     const processedHtml = processMarkdownWithImages(rawMarkdownContent, result);
                     markdownContent.innerHTML = processedHtml;
 
-                    // Re-render MathJax after content is set
                     if (window.MathJax && window.MathJax.typesetPromise) {
-                        // Use setTimeout to ensure DOM is updated before typeset
                         setTimeout(() => {
                              window.MathJax.typesetPromise([markdownContent]).catch(err => {
                                  console.error('MathJax typesetting error:', err);
                              });
                          }, 0);
                     }
-                    downloadMdBtn.style.display = 'inline-block'; // Show download button only if markdown exists
+                    downloadMdBtn.style.display = 'inline-block'; // Show download button
                 } catch(e) {
                     console.error("Error parsing markdown:", e);
-                    markdownContent.innerHTML = `<p style="color: red;">Error rendering Markdown content.</p><pre>${rawMarkdownContent}</pre>`; // Show raw if render fails
-                    downloadMdBtn.style.display = 'inline-block'; // Still allow download of raw markdown
+                    markdownContent.innerHTML = `<p style="color: red;">Error rendering Markdown content.</p><pre>${rawMarkdownContent}</pre>`;
+                    downloadMdBtn.style.display = 'inline-block';
                 }
             } else {
                 markdownContent.innerHTML = '<p>No Markdown or text content found in the response.</p>';
@@ -808,25 +794,19 @@
 
 
             // --- Display Images ---
-            imagesContent.innerHTML = ''; // Clear previous images
+            imagesContent.innerHTML = '';
             let hasImages = false; // Flag to track if any images were actually displayed
 
-            // Check for top-level images array
             if (result.images && Array.isArray(result.images)) {
                  result.images.forEach((image, index) => {
-                     if (displayImage(image, `Image ${index + 1}: `)) {
-                         hasImages = true;
-                     }
+                     if (displayImage(image, `Image ${index + 1}: `)) { hasImages = true; }
                  });
             }
-            // Check for images within pages array
             else if (result.pages && Array.isArray(result.pages)) {
                  result.pages.forEach((page, pageIndex) => {
                      if (page && page.images && Array.isArray(page.images)) {
                          page.images.forEach((image, imageIndex) => {
-                             if (displayImage(image, `Page ${pageIndex + 1}, Image ${imageIndex + 1}: `)) {
-                                 hasImages = true;
-                             }
+                             if (displayImage(image, `Page ${pageIndex + 1}, Image ${imageIndex + 1}: `)) { hasImages = true; }
                          });
                      }
                  });
@@ -839,7 +819,7 @@
 
 
         function processMarkdownWithImages(markdownText, result) {
-             // Build a map of image IDs to their base64 data URL (if available)
+             // Build map of image IDs to their base64 data URL
              const imageMap = new Map();
              if (result.pages && Array.isArray(result.pages)) {
                  result.pages.forEach(page => {
@@ -848,7 +828,6 @@
                             const base64Data = image.image_base64 || image.base64;
                              if (image.id && base64Data) {
                                 let imageDataUrl = '';
-                                // Construct data URL correctly, checking for existing prefix
                                 if (base64Data.startsWith('data:image/')) {
                                     imageDataUrl = base64Data;
                                 } else {
@@ -865,50 +844,87 @@
                  });
              }
 
-             // Temporarily replace math expressions to avoid markdown parsing issues
+             // Temporarily replace math expressions
              let mathExpressions = [];
              const mathPlaceholder = (type, index) => `%%_${type}_MATH_${index}_%%`;
-
-             // Handle display math first ($$)
-             markdownText = markdownText.replace(/\$\$(.*?)\$\$/gs, function (match, content) {
-                 mathExpressions.push(match); // Store original $$...$$
+             markdownText = markdownText.replace(/\$\$(.*?)\$\$/gs, (match, content) => {
+                 mathExpressions.push(match);
                  return mathPlaceholder('DISPLAY', mathExpressions.length - 1);
              });
-             // Handle inline math ($) - careful not to match currency
-             markdownText = markdownText.replace(/(^|\s|\()\$([^$\s][^\$]*?)\$($|\s|\.|\,|\?|\!|\))/g, function (match, pre, content, post) {
-                  const original = `$${content}$`;
-                  mathExpressions.push(original); // Store original $...$
-                  return `${pre}${mathPlaceholder('INLINE', mathExpressions.length - 1)}${post}`;
-              });
+             markdownText = markdownText.replace(/(^|\s|\()\$([^$\s][^\$]*?)\$($|\s|\.|\,|\?|\!|\))/g, (match, pre, content, post) => {
+                 const original = `$${content}$`;
+                 mathExpressions.push(original);
+                 return `${pre}${mathPlaceholder('INLINE', mathExpressions.length - 1)}${post}`;
+             });
 
-
-            // Use marked.js to convert Markdown to HTML
+            // Convert Markdown to HTML using marked.js
             let html = marked.parse(markdownText);
 
-            // Replace image placeholders (like ![alt](image_id)) in the generated HTML
-            // This regex looks for standard markdown image syntax
+            // Replace image placeholders in the generated HTML
             const markdownImageRegex = /<img\s+src="([^"]+)"(?:\s+alt="([^"]*)")?[^>]*>/g;
             html = html.replace(markdownImageRegex, (match, src, alt) => {
-                if (imageMap.has(src)) { // src here is the image.id from the markdown reference
+                if (imageMap.has(src)) {
                     const imgData = imageMap.get(src);
-                    // Use alt from image data if available, otherwise fallback to markdown alt or image id
-                    const finalAlt = imgData.alt || alt || src;
-                    // Use the pre-formatted base64 data URL from the map
-                    // Apply styles consistent with the markdown styles in CSS
+                    const finalAlt = alt || imgData.alt || src; // Use markdown alt, then image alt, then src ID
+                    // Apply styles consistent with #markdown-content img CSS
                     return `<img src="${imgData.src}" alt="${finalAlt}">`;
                 }
-                // If src is not in map (e.g., external URL), keep the original tag but maybe apply styles
-                // Note: Alt might be undefined if not provided in markdown
+                // Keep external images or images not found in map
                 return `<img src="${src}" alt="${alt || ''}">`;
             });
 
-
              // Restore math expressions
-             html = html.replace(/%%_(DISPLAY|INLINE)_MATH_(\d+)_%%/g, function (match, type, index) {
+             html = html.replace(/%%_(DISPLAY|INLINE)_MATH_(\d+)_%%/g, (match, type, index) => {
                  return mathExpressions[parseInt(index)];
              });
 
             return html;
+        }
+
+        // --- NEW FUNCTION TO PROCESS MARKDOWN FOR DOWNLOAD ---
+        function processMarkdownForDownload(markdownText, result) {
+            if (!result || !markdownText) {
+                return markdownText || ''; // Return original/empty if no result or text
+            }
+
+            // Build map of image IDs to their base64 data URL
+            const imageMap = new Map();
+            if (result.pages && Array.isArray(result.pages)) {
+                result.pages.forEach(page => {
+                    if (page && page.images && Array.isArray(page.images)) {
+                        page.images.forEach(image => {
+                            const base64Data = image.image_base64 || image.base64;
+                            if (image.id && base64Data) {
+                                let imageDataUrl = '';
+                                if (base64Data.startsWith('data:image/')) {
+                                    imageDataUrl = base64Data;
+                                } else {
+                                    const format = image.format || (base64Data.startsWith('/9j/') ? 'jpeg' : 'png');
+                                    imageDataUrl = `data:image/${format};base64,${base64Data}`;
+                                }
+                                imageMap.set(image.id, {
+                                    src: imageDataUrl,
+                                    alt: image.caption || image.id // Use caption or ID as alt
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Replace markdown image syntax ![alt](id) with ![alt](data:url)
+            const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
+            const processedMarkdown = markdownText.replace(markdownImageRegex, (match, alt, src) => {
+                if (imageMap.has(src)) { // src is the image ID from markdown reference
+                    const imgData = imageMap.get(src);
+                    // Use provided alt text, or fallback to image alt from map, or empty string
+                    const finalAlt = alt || imgData.alt || '';
+                    return `![${finalAlt}](${imgData.src})`; // Replace with data URL
+                }
+                return match; // Keep original if ID not found in map (e.g., external URL)
+            });
+
+            return processedMarkdown;
         }
 
 
@@ -916,7 +932,7 @@
 
         // Upload button click event
         uploadBtn.addEventListener('click', () => {
-            fileInput.click(); // Trigger hidden file input
+            fileInput.click();
         });
 
         // File input change event
@@ -933,7 +949,7 @@
                 apiKeyInput.focus();
                 return;
             }
-             if (apiKey.length < 20) { // Basic sanity check for key length
+             if (apiKey.length < 20) {
                  alert('Please enter a valid Mistral AI API key (it should be a longer string).');
                  apiKeyInput.focus();
                  return;
@@ -944,37 +960,37 @@
                 return;
             }
 
-            loadingIndicator.style.display = 'flex'; // Show loading spinner
-            resultsSection.style.display = 'none'; // Hide previous results
-            downloadMdBtn.style.display = 'none'; // Hide download button during processing
+            loadingIndicator.style.display = 'flex';
+            resultsSection.style.display = 'none';
+            downloadMdBtn.style.display = 'none';
 
             try {
+                console.log("Starting OCR process...");
                 const result = await processPdfWithOcr(apiKey, pdfFile);
+                console.log("OCR process finished, displaying results.");
                 displayOcrResults(result);
-                resultsSection.style.display = 'block'; // Show results section
-                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); // Scroll to results
+                resultsSection.style.display = 'block';
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (error) {
                 console.error('Error processing PDF:', error);
-                // Display error message prominently
-                 resultsSection.style.display = 'block'; // Show results section to display the error
-                 markdownContent.innerHTML = `<p style="color: red; font-weight: bold;">Processing Error:</p><p style="color: red;">${error.message || 'An unknown error occurred.'}</p><p>Please check your API key, network connection, and the console for more details.</p>`;
-                 imagesContent.innerHTML = ''; // Clear other tabs
-                 rawContent.textContent = `Error: ${error.message}`; // Show error in raw tab too
+                 resultsSection.style.display = 'block';
+                 markdownContent.innerHTML = `<p style="color: red; font-weight: bold;">Processing Error:</p><p style="color: red;">${error.message || 'An unknown error occurred.'}</p><p>Please check your API key, network connection, the console, and the file validity.</p>`;
+                 imagesContent.innerHTML = '';
+                 rawContent.textContent = `Error: ${error.message}`;
                  resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                 ocrResultData = null; // Clear data on error
 
-                // Provide more specific alerts based on common errors
                 if (error.message.includes('401') || error.message.toLowerCase().includes('unauthorized')) {
                     alert('Authentication Failed: Please verify your Mistral AI API key.');
                 } else if (error.message.includes('429')) {
-                     alert('Rate Limit Exceeded: You have made too many requests. Please wait and try again later.');
+                     alert('Rate Limit Exceeded: Too many requests. Please wait and try again.');
                 } else if (error.message.includes('signed URL') && error.message.toLowerCase().includes('expired')) {
                     alert('Error: The temporary URL for processing expired. Please try processing the file again.');
-                } else {
-                    // Alert for other errors already displayed in the results section
-                   // alert(`Error processing PDF. See details in the results area or console.`);
+                } else if (error.message.includes('422') || error.message.toLowerCase().includes('unprocessable')) {
+                     alert('API Error 422: Unprocessable Content. The server could not process the request, possibly due to file issues or invalid parameters. Check the console for details.');
                 }
             } finally {
-                loadingIndicator.style.display = 'none'; // Hide loading spinner
+                loadingIndicator.style.display = 'none';
             }
         });
 
@@ -982,11 +998,8 @@
         // Tab switching events
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                // Update button active states
                 tabButtons.forEach(btn => btn.classList.remove('active'));
                 button.classList.add('active');
-
-                // Update pane active states
                 tabPanes.forEach(pane => pane.classList.remove('active'));
                 const tabId = button.dataset.tab;
                 const activePane = document.getElementById(`${tabId}-content`);
@@ -1002,53 +1015,45 @@
         // Drag and drop events
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false); // Prevent browser default drag/drop behavior on whole page
+            document.body.addEventListener(eventName, preventDefaults, false);
         });
-
         ['dragenter', 'dragover'].forEach(eventName => {
             dropArea.addEventListener(eventName, highlight, false);
         });
-
         ['dragleave', 'drop'].forEach(eventName => {
             dropArea.addEventListener(eventName, unhighlight, false);
         });
-
         dropArea.addEventListener('drop', handleDrop, false);
 
-        // --- Download Markdown Button Event Listener ---
+        // --- Download Markdown Button Event Listener --- (Modified Version)
         downloadMdBtn.addEventListener('click', () => {
-            if (!rawMarkdownContent) {
-                alert('No Markdown content available to download.');
+            // Check if we have the raw markdown AND the full OCR result data
+            if (!rawMarkdownContent || !ocrResultData) {
+                alert('No Markdown content or OCR data available to process for download.');
                 return;
             }
 
             // Determine filename
             let filename = 'ocr_result.md';
             if (pdfFile && pdfFile.name) {
-                // Get base name without extension and add .md
                 const baseName = pdfFile.name.substring(0, pdfFile.name.lastIndexOf('.')) || pdfFile.name;
                 filename = `${baseName}.md`;
             }
 
-            // Create Blob (binary large object) from the raw markdown text
-            const blob = new Blob([rawMarkdownContent], { type: 'text/markdown;charset=utf-8' });
+            // Process the raw markdown to embed data URLs for images
+            console.log("Processing markdown for download...");
+            const processedMarkdown = processMarkdownForDownload(rawMarkdownContent, ocrResultData);
+            console.log("Processing complete for download.");
+
+            // Create Blob from the *processed* markdown text
+            const blob = new Blob([processedMarkdown], { type: 'text/markdown;charset=utf-8' });
 
             // Create a temporary link element
             const link = document.createElement('a');
-
-            // Create a URL for the blob object
             link.href = URL.createObjectURL(blob);
-
-            // Set the download attribute with the desired filename
             link.download = filename;
-
-            // Append link to the body (required for Firefox)
             document.body.appendChild(link);
-
-            // Programmatically click the link to trigger the download
             link.click();
-
-            // Clean up: Remove the link and revoke the blob URL
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
         });
