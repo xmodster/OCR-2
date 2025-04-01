@@ -619,7 +619,7 @@
                 let errorMessage = `Status ${uploadResponse.status}: ${uploadResponse.statusText}`;
                 try {
                     const errorData = await uploadResponse.json();
-                    errorMessage = errorData.error?.message || JSON.stringify(errorData) || errorMessage;
+                    errorMessage = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorMessage;
                 } catch (e) {}
                 throw new Error(`File upload failed: ${errorMessage}`);
             }
@@ -755,17 +755,16 @@
             let markdownText = '';
             if (result.markdown) {
                 markdownText = result.markdown;
-            } else if (result.pages && Array.isArray(result.pages)) { // Use pages if top-level markdown absent
+            } else if (result.pages && Array.isArray(result.pages)) {
                 markdownText = result.pages
                     .filter(page => page)
                     .map(page => page.markdown || page.text || page.content || '')
                     .join('\n\n---\n\n');
-            } else if (result.text) { // Fallback to plain text
+            } else if (result.text) {
                 markdownText = result.text;
-            } else if (result.content) { // Another potential fallback field
+            } else if (result.content) {
                  markdownText = result.content;
             }
-            // Store the raw markdown
             rawMarkdownContent = markdownText;
 
 
@@ -782,7 +781,7 @@
                              });
                          }, 0);
                     }
-                    downloadMdBtn.style.display = 'inline-block'; // Show download button
+                    downloadMdBtn.style.display = 'inline-block';
                 } catch(e) {
                     console.error("Error parsing markdown:", e);
                     markdownContent.innerHTML = `<p style="color: red;">Error rendering Markdown content.</p><pre>${rawMarkdownContent}</pre>`;
@@ -795,7 +794,7 @@
 
             // --- Display Images ---
             imagesContent.innerHTML = '';
-            let hasImages = false; // Flag to track if any images were actually displayed
+            let hasImages = false;
 
             if (result.images && Array.isArray(result.images)) {
                  result.images.forEach((image, index) => {
@@ -865,11 +864,9 @@
             html = html.replace(markdownImageRegex, (match, src, alt) => {
                 if (imageMap.has(src)) {
                     const imgData = imageMap.get(src);
-                    const finalAlt = alt || imgData.alt || src; // Use markdown alt, then image alt, then src ID
-                    // Apply styles consistent with #markdown-content img CSS
+                    const finalAlt = alt || imgData.alt || src;
                     return `<img src="${imgData.src}" alt="${finalAlt}">`;
                 }
-                // Keep external images or images not found in map
                 return `<img src="${src}" alt="${alt || ''}">`;
             });
 
@@ -881,10 +878,10 @@
             return html;
         }
 
-        // --- NEW FUNCTION TO PROCESS MARKDOWN FOR DOWNLOAD ---
+        // --- FUNCTION TO PROCESS MARKDOWN FOR DOWNLOAD (WITH DEBUG LOGS) ---
         function processMarkdownForDownload(markdownText, result) {
             if (!result || !markdownText) {
-                return markdownText || ''; // Return original/empty if no result or text
+                return markdownText || '';
             }
 
             // Build map of image IDs to their base64 data URL
@@ -904,25 +901,35 @@
                                 }
                                 imageMap.set(image.id, {
                                     src: imageDataUrl,
-                                    alt: image.caption || image.id // Use caption or ID as alt
+                                    alt: image.caption || image.id
                                 });
                             }
                         });
                     }
                 });
             }
+            console.log("Image Map for Download:", imageMap); // Log the map
 
             // Replace markdown image syntax ![alt](id) with ![alt](data:url)
             const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
             const processedMarkdown = markdownText.replace(markdownImageRegex, (match, alt, src) => {
+                // **** ADDED DEBUG LOGS ****
+                console.log(`REGEX captured src: "${src}" (Type: ${typeof src})`);
+                console.log(`Checking if imageMap has key: "${src}"`);
+                // **** END ADDED DEBUG LOGS ****
+
                 if (imageMap.has(src)) { // src is the image ID from markdown reference
+                    console.log(`>>> Match FOUND in imageMap for key: "${src}"`); // Deeper log
                     const imgData = imageMap.get(src);
                     // Use provided alt text, or fallback to image alt from map, or empty string
                     const finalAlt = alt || imgData.alt || '';
                     return `![${finalAlt}](${imgData.src})`; // Replace with data URL
+                } else {
+                    console.log(`>>> Match NOT FOUND in imageMap for key: "${src}"`); // Deeper log
+                    return match; // Keep original if ID not found (e.g., external URL)
                 }
-                return match; // Keep original if ID not found in map (e.g., external URL)
             });
+            // console.log("Processed Markdown for Download (Output):", processedMarkdown); // Keep this log if needed
 
             return processedMarkdown;
         }
@@ -968,7 +975,7 @@
                 console.log("Starting OCR process...");
                 const result = await processPdfWithOcr(apiKey, pdfFile);
                 console.log("OCR process finished, displaying results.");
-                displayOcrResults(result);
+                displayOcrResults(result); // This now also stores result in ocrResultData
                 resultsSection.style.display = 'block';
                 resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (error) {
@@ -1025,7 +1032,7 @@
         });
         dropArea.addEventListener('drop', handleDrop, false);
 
-        // --- Download Markdown Button Event Listener --- (Modified Version)
+        // --- Download Markdown Button Event Listener --- (Modified to use processing func and added log)
         downloadMdBtn.addEventListener('click', () => {
             // Check if we have the raw markdown AND the full OCR result data
             if (!rawMarkdownContent || !ocrResultData) {
@@ -1041,9 +1048,10 @@
             }
 
             // Process the raw markdown to embed data URLs for images
+            console.log("Raw Markdown for Download (Input):", rawMarkdownContent); // Log Input
             console.log("Processing markdown for download...");
             const processedMarkdown = processMarkdownForDownload(rawMarkdownContent, ocrResultData);
-            console.log("Processing complete for download.");
+            console.log("Processed Markdown for Download (Output):", processedMarkdown); // Log Output
 
             // Create Blob from the *processed* markdown text
             const blob = new Blob([processedMarkdown], { type: 'text/markdown;charset=utf-8' });
