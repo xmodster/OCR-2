@@ -113,7 +113,7 @@
 
         #upload-btn,
         #process-btn,
-        .download-btn { /* Added .download-btn */
+        .download-btn { /* General button styles */
             padding: 0.75rem 1.5rem;
             background-color: var(--primary-color);
             color: white;
@@ -122,16 +122,17 @@
             font-size: 1rem;
             cursor: pointer;
             transition: background-color 0.3s;
+            box-sizing: border-box; /* Ensure padding doesn't add to width */
         }
 
         #upload-btn:hover,
         #process-btn:hover,
-        .download-btn:hover { /* Added .download-btn */
+        .download-btn:hover {
             background-color: #3a44b1;
         }
 
         #process-btn {
-            margin: 1rem 0;
+            margin-top: 1rem; /* Adjusted margin */
             display: block;
             width: 100%;
         }
@@ -145,9 +146,9 @@
         /* Style for download button */
         .download-btn {
             background-color: var(--secondary-color); /* Use secondary color */
-            margin-top: 1rem; /* Add space above */
-            display: inline-block; /* Adjust display */
-            width: auto; /* Adjust width */
+            display: block; /* Make it block to center */
+            width: fit-content; /* Adjust width to content */
+            margin: 1rem auto 0; /* Top margin, auto horizontal margins for centering */
         }
 
         .download-btn:hover {
@@ -195,7 +196,7 @@
         }
 
         .results-section {
-            display: none;
+            display: none; /* Initially hidden */
         }
 
         .tabs {
@@ -230,10 +231,10 @@
         #markdown-content {
             padding: 1rem;
             line-height: 1.8;
-            background-color: #fff; /* Add a white background for clarity */
-            border: 1px solid var(--border-color); /* Optional border */
+            background-color: #fff;
+            border: 1px solid var(--border-color);
             border-radius: 4px;
-            margin-bottom: 1rem; /* Space before potential download button */
+            margin-bottom: 1rem;
         }
 
         #images-content {
@@ -250,8 +251,8 @@
         }
 
         .image-card img {
-            width: 100%; /* Make image fill card width */
-            height: auto; /* Maintain aspect ratio */
+            width: 100%;
+            height: auto;
             display: block;
         }
 
@@ -297,13 +298,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* Markdown styling */
@@ -312,75 +308,18 @@
         #markdown-content h3,
         #markdown-content h4,
         #markdown-content h5,
-        #markdown-content h6 {
-            margin-top: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        #markdown-content p {
-            margin-bottom: 1rem;
-        }
-
+        #markdown-content h6 { margin-top: 1rem; margin-bottom: 0.5rem; }
+        #markdown-content p { margin-bottom: 1rem; }
         #markdown-content ul,
-        #markdown-content ol {
-            margin-left: 1.5rem;
-            margin-bottom: 1rem;
-        }
-
-        #markdown-content code {
-            background-color: var(--light-color);
-            padding: 0.2rem 0.4rem;
-            border-radius: 3px;
-            font-family: monospace;
-        }
-
-        #markdown-content pre { /* Style for code blocks */
-             background-color: var(--light-color);
-             padding: 1rem;
-             border-radius: 4px;
-             overflow-x: auto;
-             font-size: 0.85rem;
-             white-space: pre-wrap;
-             word-wrap: break-word; /* Ensure long lines wrap */
-             margin-bottom: 1rem;
-        }
-        #markdown-content pre > code { /* Reset specific code styles within pre */
-             padding: 0;
-             background: none;
-             border-radius: 0;
-             font-family: monospace; /* Inherit font */
-        }
-
-
-        #markdown-content table {
-            border-collapse: collapse;
-            margin-bottom: 1rem;
-            width: 100%;
-        }
-
+        #markdown-content ol { margin-left: 1.5rem; margin-bottom: 1rem; }
+        #markdown-content code { background-color: var(--light-color); padding: 0.2rem 0.4rem; border-radius: 3px; font-family: monospace; }
+        #markdown-content pre { background-color: var(--light-color); padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.85rem; white-space: pre-wrap; word-wrap: break-word; margin-bottom: 1rem; }
+        #markdown-content pre > code { padding: 0; background: none; border-radius: 0; font-family: monospace; }
+        #markdown-content table { border-collapse: collapse; margin-bottom: 1rem; width: 100%; }
         #markdown-content th,
-        #markdown-content td {
-            border: 1px solid var(--border-color);
-            padding: 0.5rem;
-            text-align: left;
-        }
-
-        #markdown-content blockquote {
-            border-left: 3px solid var(--secondary-color);
-            padding-left: 1rem;
-            margin-left: 0;
-            color: var(--secondary-color);
-            margin-bottom: 1rem; /* Add margin */
-        }
-
-        #markdown-content img { /* Styles for images embedded in markdown */
-            max-width: 100%;
-            height: auto;
-            margin: 1rem auto; /* Center images */
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            display: block; /* Ensure image is block level */
-        }
+        #markdown-content td { border: 1px solid var(--border-color); padding: 0.5rem; text-align: left; }
+        #markdown-content blockquote { border-left: 3px solid var(--secondary-color); padding-left: 1rem; margin-left: 0; color: var(--secondary-color); margin-bottom: 1rem; }
+        #markdown-content img { max-width: 100%; height: auto; margin: 1rem auto; border: 1px solid var(--border-color); border-radius: 4px; display: block; }
     </style>
 </head>
 
@@ -410,6 +349,8 @@
 
         <button id="process-btn" disabled>Process with OCR</button>
 
+        <button id="download-md-btn" class="download-btn" style="display: none;">Download Markdown</button>
+
         <div class="card results-section" id="results-section">
             <h2>OCR Results</h2>
             <div class="tabs">
@@ -425,8 +366,7 @@
                     <pre></pre>
                 </div>
             </div>
-            <button id="download-md-btn" class="download-btn" style="display: none;">Download Markdown</button>
-        </div>
+            </div>
 
         <div id="loading" class="loading">
             <div class="spinner"></div>
@@ -453,13 +393,13 @@
         const tabButtons = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
         const dropArea = document.getElementById('drop-area');
-        const downloadMdBtn = document.getElementById('download-md-btn');
+        const downloadMdBtn = document.getElementById('download-md-btn'); // Reference remains the same
 
         // State
         let pdfFile = null;
         let currentPdfUrl = null;
-        let rawMarkdownContent = ''; // Variable to store raw markdown from API
-        let ocrResultData = null;   // Variable to store the full API result object
+        let rawMarkdownContent = '';
+        let ocrResultData = null;
 
         // PDF Preview Functions
         async function loadPdfPreview(pdfUrl) {
@@ -500,7 +440,7 @@
                 });
             } catch (error) {
                 console.error('Error loading PDF preview:', error);
-                pdfPreview.innerHTML = '<div class="error" style="padding: 1rem; color: red;">Failed to load PDF preview. Ensure the file is a valid PDF.</div>';
+                pdfPreview.innerHTML = '<div class="error" style="padding: 1rem; color: red;">Failed to load PDF preview.</div>';
             }
         }
 
@@ -517,10 +457,7 @@
                  canvas.width = scaledViewport.width;
                  canvas.style.margin = '0 auto';
                  canvas.style.display = 'block';
-                 const renderContext = {
-                     canvasContext: context,
-                     viewport: scaledViewport
-                 };
+                 const renderContext = { canvasContext: context, viewport: scaledViewport };
                  await page.render(renderContext).promise;
                  container.appendChild(canvas);
             } catch(error) {
@@ -546,21 +483,18 @@
         function handleDrop(e) {
             const dt = e.dataTransfer;
             const files = dt.files;
-            if (files.length > 0 && files[0].type === 'application/pdf') {
-                handleFiles(files);
-            } else {
-                alert('Please drop a PDF file');
-            }
+            if (files.length > 0 && files[0].type === 'application/pdf') { handleFiles(files); }
+            else { alert('Please drop a PDF file'); }
         }
         function handleFiles(files) {
             if (files.length > 0) {
                 pdfFile = files[0];
                 fileNameDisplay.textContent = `Selected file: ${pdfFile.name}`;
-                resultsSection.style.display = 'none';
+                resultsSection.style.display = 'none'; // Hide results on new file
                 markdownContent.innerHTML = '';
                 imagesContent.innerHTML = '';
                 rawContent.textContent = '';
-                downloadMdBtn.style.display = 'none';
+                downloadMdBtn.style.display = 'none'; // Hide download button
                 rawMarkdownContent = '';
                 ocrResultData = null;
                 if (currentPdfUrl) { URL.revokeObjectURL(currentPdfUrl); }
@@ -576,18 +510,13 @@
             const formData = new FormData();
             formData.append('purpose', 'ocr');
             formData.append('file', pdfFile);
-            console.log('Uploading file to Mistral API...');
+            console.log('Uploading file...');
             const uploadResponse = await fetch('https://api.mistral.ai/v1/files', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${apiKey}` },
-                body: formData
+                method: 'POST', headers: { 'Authorization': `Bearer ${apiKey}` }, body: formData
             });
             if (!uploadResponse.ok) {
                 let errorMessage = `Status ${uploadResponse.status}: ${uploadResponse.statusText}`;
-                try {
-                    const errorData = await uploadResponse.json();
-                    errorMessage = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorMessage;
-                } catch (e) {}
+                try { const errorData = await uploadResponse.json(); errorMessage = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorMessage; } catch (e) {}
                 throw new Error(`File upload failed: ${errorMessage}`);
             }
             return await uploadResponse.json();
@@ -597,52 +526,39 @@
             try {
                 const fileData = await uploadPdfToMistral(apiKey, pdfFile);
                 const fileId = fileData.id;
-                console.log('File uploaded successfully. File ID:', fileId);
+                console.log('File uploaded. ID:', fileId);
                 console.log('Requesting signed URL...');
-                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=1`, { // Use 1 for 1 hour
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${apiKey}` }
+                const urlResponse = await fetch(`https://api.mistral.ai/v1/files/${fileId}/url?expiry=1`, { // 1 hour expiry
+                    method: 'GET', headers: { 'Accept': 'application/json', 'Authorization': `Bearer ${apiKey}` }
                 });
                 if (!urlResponse.ok) {
                      let errorDetail = `Status ${urlResponse.status}: ${urlResponse.statusText}`;
-                     try {
-                        const errorData = await urlResponse.json();
-                        errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail;
-                     } catch(e) {}
+                     try { const errorData = await urlResponse.json(); errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail; } catch(e) {}
                     throw new Error(`Failed to get signed URL: ${errorDetail}`);
                 }
                 const urlData = await urlResponse.json();
                 const signedUrl = urlData.url;
-                console.log('Signed URL obtained successfully.');
+                console.log('Signed URL obtained.');
                 console.log('Sending request to OCR endpoint...');
                 const ocrResponse = await fetch('https://api.mistral.ai/v1/ocr', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-                    body: JSON.stringify({
-                        model: "mistral-ocr-latest",
-                        document: { type: "document_url", document_url: signedUrl },
-                        include_image_base64: true
-                    })
+                    body: JSON.stringify({ model: "mistral-ocr-latest", document: { type: "document_url", document_url: signedUrl }, include_image_base64: true })
                 });
                 if (!ocrResponse.ok) {
                     let errorDetail = `Status ${ocrResponse.status}: ${ocrResponse.statusText}`;
-                    try {
-                        const errorData = await ocrResponse.json();
-                         errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail;
-                    } catch (e) {}
+                    try { const errorData = await ocrResponse.json(); errorDetail = errorData.detail || errorData.error?.message || JSON.stringify(errorData) || errorDetail; } catch (e) {}
                     throw new Error(`OCR processing failed: ${errorDetail}`);
                 }
                 const result = await ocrResponse.json();
-                console.log('OCR processing successful.');
+                console.log('OCR successful.');
                 return result;
             } catch (error) {
-                console.error('Error in OCR process:', error);
-                throw error;
+                console.error('Error in OCR process:', error); throw error;
             }
         }
 
-
-        // --- Helper Function to Display Images --- (Corrected Version)
+        // --- Helper Function to Display Images ---
         const displayImage = (image, prefix = '') => {
              const base64Data = image.image_base64 || image.base64;
              if (base64Data) {
@@ -651,9 +567,8 @@
                 const img = document.createElement('img');
                 img.alt = `${prefix}${image.caption || 'Image'}`;
                 img.style.maxWidth = '100%';
-                if (base64Data.startsWith('data:image/')) {
-                    img.src = base64Data;
-                } else {
+                if (base64Data.startsWith('data:image/')) { img.src = base64Data; }
+                else {
                     const format = image.format || (base64Data.startsWith('/9j/') ? 'jpeg' : 'png');
                     img.src = `data:image/${format};base64,${base64Data}`;
                 }
@@ -670,41 +585,25 @@
 
         // --- Function to Display OCR Results --- (With Logging Added)
         function displayOcrResults(result) {
-            rawContent.textContent = '';
-            markdownContent.innerHTML = '';
-            imagesContent.innerHTML = '';
-            rawMarkdownContent = '';
-            downloadMdBtn.style.display = 'none';
-            ocrResultData = result; // Store the full result globally
-            console.log("displayOcrResults: Stored ocrResultData:", ocrResultData); // <<< LOGGING ADDED
+            rawContent.textContent = ''; markdownContent.innerHTML = ''; imagesContent.innerHTML = '';
+            rawMarkdownContent = ''; downloadMdBtn.style.display = 'none';
+            ocrResultData = result; // Store result
+            console.log("displayOcrResults: Stored ocrResultData:", ocrResultData);
 
             if (!result) {
-                markdownContent.innerHTML = '<p>Error: No data received from the API.</p>';
-                imagesContent.innerHTML = '<p>No images available.</p>';
-                ocrResultData = null;
-                return;
+                markdownContent.innerHTML = '<p>Error: No data from API.</p>'; imagesContent.innerHTML = '<p>No images.</p>';
+                ocrResultData = null; return;
             }
-
-            try {
-                rawContent.textContent = JSON.stringify(result, null, 2);
-            } catch (e) {
-                 rawContent.textContent = "Error displaying raw JSON.";
-                 console.error("Error stringifying result: ", e);
-            }
+            try { rawContent.textContent = JSON.stringify(result, null, 2); }
+            catch (e) { rawContent.textContent = "Error displaying raw JSON."; console.error("Error stringifying:", e); }
 
             let markdownText = '';
-            if (result.markdown) {
-                markdownText = result.markdown;
-            } else if (result.pages && Array.isArray(result.pages)) {
-                markdownText = result.pages.filter(page => page).map(page => page.markdown || page.text || page.content || '').join('\n\n---\n\n');
-            } else if (result.text) {
-                markdownText = result.text;
-            } else if (result.content) {
-                 markdownText = result.content;
-            }
+            if (result.markdown) { markdownText = result.markdown; }
+            else if (result.pages && Array.isArray(result.pages)) { markdownText = result.pages.filter(p => p).map(p => p.markdown || p.text || p.content || '').join('\n\n---\n\n'); }
+            else if (result.text) { markdownText = result.text; }
+            else if (result.content) { markdownText = result.content; }
             rawMarkdownContent = markdownText;
-            console.log("displayOcrResults: Set rawMarkdownContent to:", rawMarkdownContent); // <<< LOGGING ADDED
-
+            console.log("displayOcrResults: Set rawMarkdownContent to:", rawMarkdownContent);
 
             if (rawMarkdownContent) {
                 try {
@@ -713,27 +612,21 @@
                     if (window.MathJax && window.MathJax.typesetPromise) {
                         setTimeout(() => { window.MathJax.typesetPromise([markdownContent]).catch(err => console.error('MathJax error:', err)); }, 0);
                     }
-                    downloadMdBtn.style.display = 'inline-block';
+                    // Changed to 'block' to match CSS centering style
+                    downloadMdBtn.style.display = 'block';
                 } catch(e) {
                     console.error("Error parsing markdown:", e);
                     markdownContent.innerHTML = `<p style="color: red;">Error rendering Markdown.</p><pre>${rawMarkdownContent}</pre>`;
-                    downloadMdBtn.style.display = 'inline-block';
+                     // Changed to 'block' to match CSS centering style
+                    downloadMdBtn.style.display = 'block';
                 }
             } else {
-                markdownContent.innerHTML = '<p>No Markdown or text content found.</p>';
+                markdownContent.innerHTML = '<p>No Markdown/text content found.</p>';
             }
 
-            imagesContent.innerHTML = '';
-            let hasImages = false;
-            if (result.images && Array.isArray(result.images)) {
-                 result.images.forEach((image, index) => { if (displayImage(image, `Image ${index + 1}: `)) { hasImages = true; } });
-            } else if (result.pages && Array.isArray(result.pages)) {
-                 result.pages.forEach((page, pageIndex) => {
-                     if (page && page.images && Array.isArray(page.images)) {
-                         page.images.forEach((image, imageIndex) => { if (displayImage(image, `Page ${pageIndex + 1}, Image ${imageIndex + 1}: `)) { hasImages = true; } });
-                     }
-                 });
-            }
+            imagesContent.innerHTML = ''; let hasImages = false;
+            if (result.images && Array.isArray(result.images)) { result.images.forEach((img, i) => { if (displayImage(img, `Image ${i+1}: `)) hasImages = true; }); }
+            else if (result.pages && Array.isArray(result.pages)) { result.pages.forEach((p, pi) => { if (p && p.images && Array.isArray(p.images)) { p.images.forEach((img, ii) => { if (displayImage(img, `P${pi+1}, Img ${ii+1}: `)) hasImages = true; }); } }); }
             if (!hasImages) { imagesContent.innerHTML = '<p>No base64 images found.</p>'; }
         }
 
@@ -741,183 +634,107 @@
         function processMarkdownWithImages(markdownText, result) {
              const imageMap = new Map();
              if (result.pages && Array.isArray(result.pages)) {
-                 result.pages.forEach(page => {
-                     if (page && page.images && Array.isArray(page.images)) {
-                         page.images.forEach(image => {
-                            const base64Data = image.image_base64 || image.base64;
-                             if (image.id && base64Data) {
-                                let imageDataUrl = '';
-                                if (base64Data.startsWith('data:image/')) { imageDataUrl = base64Data; }
-                                else {
-                                    const format = image.format || (base64Data.startsWith('/9j/') ? 'jpeg' : 'png');
-                                    imageDataUrl = `data:image/${format};base64,${base64Data}`;
-                                }
-                                imageMap.set(image.id, { src: imageDataUrl, alt: image.caption || image.id });
-                             }
-                         });
-                     }
-                 });
+                 result.pages.forEach(p => { if (p && p.images && Array.isArray(p.images)) { p.images.forEach(img => { const d = img.image_base64 || img.base64; if (img.id && d) { let u = ''; if (d.startsWith('data:image/')) { u = d; } else { const f = img.format || (d.startsWith('/9j/') ? 'jpeg' : 'png'); u = `data:image/${f};base64,${d}`; } imageMap.set(img.id, { src: u, alt: img.caption || img.id }); } }); } });
              }
-
-             let mathExpressions = [];
-             const mathPlaceholder = (type, index) => `%%_${type}_MATH_${index}_%%`;
-             markdownText = markdownText.replace(/\$\$(.*?)\$\$/gs, (match, content) => { mathExpressions.push(match); return mathPlaceholder('DISPLAY', mathExpressions.length - 1); });
-             markdownText = markdownText.replace(/(^|\s|\()\$([^$\s][^\$]*?)\$($|\s|\.|\,|\?|\!|\))/g, (match, pre, content, post) => { const original = `$${content}$`; mathExpressions.push(original); return `${pre}${mathPlaceholder('INLINE', mathExpressions.length - 1)}${post}`; });
-
-            let html = marked.parse(markdownText);
-
-            const markdownImageRegex = /<img\s+src="([^"]+)"(?:\s+alt="([^"]*)")?[^>]*>/g;
-            html = html.replace(markdownImageRegex, (match, src, alt) => {
-                if (imageMap.has(src)) {
-                    const imgData = imageMap.get(src);
-                    const finalAlt = alt || imgData.alt || src;
-                    return `<img src="${imgData.src}" alt="${finalAlt}">`;
-                }
-                return `<img src="${src}" alt="${alt || ''}">`;
-            });
-
-             html = html.replace(/%%_(DISPLAY|INLINE)_MATH_(\d+)_%%/g, (match, type, index) => { return mathExpressions[parseInt(index)]; });
-
-            return html;
+             let mathExpr = []; const mathPh = (t, i) => `%%_${t}_MATH_${i}_%%`;
+             markdownText = markdownText.replace(/\$\$(.*?)\$\$/gs, (m, c) => { mathExpr.push(m); return mathPh('DISPLAY', mathExpr.length - 1); });
+             markdownText = markdownText.replace(/(^|\s|\()\$([^$\s][^\$]*?)\$($|\s|\.|\,|\?|\!|\))/g, (m, p, c, post) => { const o = `$${c}$`; mathExpr.push(o); return `${p}${mathPh('INLINE', mathExpr.length - 1)}${post}`; });
+             let html = marked.parse(markdownText);
+             const mdImgRgx = /<img\s+src="([^"]+)"(?:\s+alt="([^"]*)")?[^>]*>/g;
+             html = html.replace(mdImgRgx, (m, src, alt) => { if (imageMap.has(src)) { const iD = imageMap.get(src); const fA = alt || iD.alt || src; return `<img src="${iD.src}" alt="${fA}">`; } return `<img src="${src}" alt="${alt || ''}">`; });
+             html = html.replace(/%%_(DISPLAY|INLINE)_MATH_(\d+)_%%/g, (m, t, i) => { return mathExpr[parseInt(i)]; });
+             return html;
         }
 
         // --- Function to Process Markdown for Download --- (With Logging Added)
         function processMarkdownForDownload(markdownText, result) {
             if (!result || !markdownText) { return markdownText || ''; }
-
             const imageMap = new Map();
              if (result.pages && Array.isArray(result.pages)) {
-                 result.pages.forEach(page => {
-                     if (page && page.images && Array.isArray(page.images)) {
-                         page.images.forEach(image => {
-                            const base64Data = image.image_base64 || image.base64;
-                             if (image.id && base64Data) {
-                                let imageDataUrl = '';
-                                if (base64Data.startsWith('data:image/')) { imageDataUrl = base64Data; }
-                                else {
-                                    const format = image.format || (base64Data.startsWith('/9j/') ? 'jpeg' : 'png');
-                                    imageDataUrl = `data:image/${format};base64,${base64Data}`;
-                                }
-                                imageMap.set(image.id, { src: imageDataUrl, alt: image.caption || image.id });
-                             }
-                         });
-                     }
-                 });
+                 result.pages.forEach(p => { if (p && p.images && Array.isArray(p.images)) { p.images.forEach(img => { const d = img.image_base64 || img.base64; if (img.id && d) { let u = ''; if (d.startsWith('data:image/')) { u = d; } else { const f = img.format || (d.startsWith('/9j/') ? 'jpeg' : 'png'); u = `data:image/${f};base64,${d}`; } imageMap.set(img.id, { src: u, alt: img.caption || img.id }); } }); } });
              }
-            console.log("Image Map for Download:", imageMap); // <<< DEBUG LOG
-
-            const markdownImageRegex = /!\[(.*?)\]\((.*?)\)/g;
-            const processedMarkdown = markdownText.replace(markdownImageRegex, (match, alt, src) => {
-                console.log(`REGEX captured src: "${src}" (Type: ${typeof src})`); // <<< DEBUG LOG
-                console.log(`Checking if imageMap has key: "${src}"`); // <<< DEBUG LOG
+            console.log("Image Map for Download:", imageMap);
+            const mdImgRgx = /!\[(.*?)\]\((.*?)\)/g;
+            const processed = markdownText.replace(mdImgRgx, (match, alt, src) => {
+                console.log(`REGEX captured src: "${src}" (Type: ${typeof src})`);
+                console.log(`Checking if imageMap has key: "${src}"`);
                 if (imageMap.has(src)) {
-                    console.log(`>>> Match FOUND in imageMap for key: "${src}"`); // <<< DEBUG LOG
-                    const imgData = imageMap.get(src);
-                    const finalAlt = alt || imgData.alt || '';
-                    return `![${finalAlt}](${imgData.src})`;
+                    console.log(`>>> Match FOUND in imageMap for key: "${src}"`);
+                    const iD = imageMap.get(src); const fA = alt || iD.alt || ''; return `![${fA}](${iD.src})`;
                 } else {
-                     console.log(`>>> Match NOT FOUND in imageMap for key: "${src}"`); // <<< DEBUG LOG
-                    return match;
+                    console.log(`>>> Match NOT FOUND in imageMap for key: "${src}"`); return match;
                 }
             });
-
-            return processedMarkdown;
+            return processed;
         }
-
 
         // --- Event Listeners Setup ---
         uploadBtn.addEventListener('click', () => { fileInput.click(); });
         fileInput.addEventListener('change', (e) => { handleFiles(e.target.files); });
 
         processBtn.addEventListener('click', async () => {
-            const apiKey = apiKeyInput.value.trim();
-            if (!apiKey) { alert('Please enter your Mistral AI API key.'); apiKeyInput.focus(); return; }
-            if (apiKey.length < 20) { alert('Please enter a valid Mistral AI API key.'); apiKeyInput.focus(); return; }
-            if (!pdfFile) { alert('Please select or drop a PDF file first.'); return; }
+            // ... (API key and file checks) ...
+             const apiKey = apiKeyInput.value.trim();
+             if (!apiKey) { alert('Please enter API key.'); apiKeyInput.focus(); return; }
+             if (apiKey.length < 20) { alert('Please enter valid API key.'); apiKeyInput.focus(); return; }
+             if (!pdfFile) { alert('Please select PDF file.'); return; }
 
-            loadingIndicator.style.display = 'flex';
-            resultsSection.style.display = 'none';
-            downloadMdBtn.style.display = 'none';
-
+            loadingIndicator.style.display = 'flex'; resultsSection.style.display = 'none'; downloadMdBtn.style.display = 'none';
             try {
-                console.log("Starting OCR process...");
-                const result = await processPdfWithOcr(apiKey, pdfFile);
-                console.log("OCR process finished, displaying results.");
-                displayOcrResults(result);
-                resultsSection.style.display = 'block';
-                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                console.log("Starting OCR..."); const result = await processPdfWithOcr(apiKey, pdfFile);
+                console.log("OCR done, displaying."); displayOcrResults(result);
+                resultsSection.style.display = 'block'; resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             } catch (error) {
-                console.error('Error processing PDF:', error);
-                 resultsSection.style.display = 'block';
-                 markdownContent.innerHTML = `<p style="color: red; font-weight: bold;">Processing Error:</p><p style="color: red;">${error.message || 'An unknown error occurred.'}</p><p>Check API key, network, console, and file validity.</p>`;
-                 imagesContent.innerHTML = '';
-                 rawContent.textContent = `Error: ${error.message}`;
-                 resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                 ocrResultData = null; // Clear data on error
-
-                if (error.message.includes('401') || error.message.toLowerCase().includes('unauthorized')) { alert('Authentication Failed: Verify API key.'); }
-                else if (error.message.includes('429')) { alert('Rate Limit Exceeded. Wait and retry.'); }
-                else if (error.message.includes('signed URL') && error.message.toLowerCase().includes('expired')) { alert('Error: Temporary URL expired. Try processing again.'); }
-                else if (error.message.includes('422') || error.message.toLowerCase().includes('unprocessable')) { alert('API Error 422: Unprocessable Content. Check file/parameters/console.'); }
-            } finally {
-                loadingIndicator.style.display = 'none';
-            }
+                console.error('Error processing PDF:', error); resultsSection.style.display = 'block';
+                markdownContent.innerHTML = `<p style="color:red;font-weight:bold;">Error:</p><p style="color:red;">${error.message||'Unknown error.'}</p><p>Check key, network, console, file.</p>`;
+                imagesContent.innerHTML = ''; rawContent.textContent = `Error: ${error.message}`;
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' }); ocrResultData = null;
+                if (error.message.includes('401')) { alert('Auth Failed: Verify API key.'); }
+                else if (error.message.includes('429')) { alert('Rate Limit Exceeded.'); }
+                else if (error.message.includes('URL') && error.message.includes('expired')) { alert('Error: Temp URL expired. Retry.'); }
+                else if (error.message.includes('422')) { alert('API Error 422: Unprocessable. Check file/params/console.'); }
+            } finally { loadingIndicator.style.display = 'none'; }
         });
 
         tabButtons.forEach(button => {
             button.addEventListener('click', () => {
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
+                tabButtons.forEach(btn => btn.classList.remove('active')); button.classList.add('active');
                 tabPanes.forEach(pane => pane.classList.remove('active'));
-                const tabId = button.dataset.tab;
-                const activePane = document.getElementById(`${tabId}-content`);
-                if (activePane) { activePane.classList.add('active'); }
-                else { console.warn(`Tab pane not found: ${tabId}-content`); }
+                const tabId = button.dataset.tab; const activePane = document.getElementById(`${tabId}-content`);
+                if (activePane) { activePane.classList.add('active'); } else { console.warn(`Tab pane not found: ${tabId}-content`); }
             });
         });
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            dropArea.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
-        ['dragenter', 'dragover'].forEach(eventName => { dropArea.addEventListener(eventName, highlight, false); });
-        ['dragleave', 'drop'].forEach(eventName => { dropArea.addEventListener(eventName, unhighlight, false); });
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(ev => { dropArea.addEventListener(ev, preventDefaults, false); document.body.addEventListener(ev, preventDefaults, false); });
+        ['dragenter', 'dragover'].forEach(ev => { dropArea.addEventListener(ev, highlight, false); });
+        ['dragleave', 'drop'].forEach(ev => { dropArea.addEventListener(ev, unhighlight, false); });
         dropArea.addEventListener('drop', handleDrop, false);
 
         // --- Download Markdown Button Event Listener --- (With Logging Added)
         downloadMdBtn.addEventListener('click', () => {
-            console.log("Download button clicked. Checking variables..."); // <<< DEBUG LOG
-            console.log("Value of rawMarkdownContent:", rawMarkdownContent); // <<< DEBUG LOG
-            console.log("Value of ocrResultData:", ocrResultData); // <<< DEBUG LOG
+            console.log("Download button clicked. Checking variables...");
+            console.log("Value of rawMarkdownContent:", rawMarkdownContent);
+            console.log("Value of ocrResultData:", ocrResultData);
 
             if (!rawMarkdownContent || !ocrResultData) {
                 alert('No Markdown content or OCR data available to process for download.');
-                console.log("Download aborted: Missing rawMarkdownContent or ocrResultData."); // <<< DEBUG LOG
+                console.log("Download aborted: Missing rawMarkdownContent or ocrResultData.");
                 return;
             }
-
             let filename = 'ocr_result.md';
-            if (pdfFile && pdfFile.name) {
-                const baseName = pdfFile.name.substring(0, pdfFile.name.lastIndexOf('.')) || pdfFile.name;
-                filename = `${baseName}.md`;
-            }
+            if (pdfFile && pdfFile.name) { const baseName = pdfFile.name.substring(0, pdfFile.name.lastIndexOf('.')) || pdfFile.name; filename = `${baseName}.md`; }
 
-            console.log("Raw Markdown for Download (Input):", rawMarkdownContent); // Keep this log
+            console.log("Raw Markdown for Download (Input):", rawMarkdownContent);
             const processedMarkdown = processMarkdownForDownload(rawMarkdownContent, ocrResultData);
-            console.log("Processed Markdown for Download (Output):", processedMarkdown); // Keep this log
+            console.log("Processed Markdown for Download (Output):", processedMarkdown);
 
             const blob = new Blob([processedMarkdown], { type: 'text/markdown;charset=utf-8' });
-
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            link.download = filename; document.body.appendChild(link); link.click();
+            document.body.removeChild(link); URL.revokeObjectURL(link.href);
         });
 
     </script>
 </body>
-
 </html>
